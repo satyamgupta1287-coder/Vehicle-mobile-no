@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vehicle Full Details</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #020617;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.box {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 15px;
+    max-width: 420px;
+    margin: auto;
+}
+
+input {
+    padding: 12px;
+    width: 85%;
+    border-radius: 8px;
+    border: none;
+    margin-top: 10px;
+    text-transform: uppercase;
+}
+
+button {
+    margin-top: 10px;
+    padding: 12px 20px;
+    border: none;
+    background: #22c55e;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.result {
+    margin-top: 15px;
+    text-align: left;
+    background: #334155;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.label {
+    color: #38bdf8;
+}
+
+.na {
+    color: gray;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+    <h2>🚗 Vehicle Full Details</h2>
+
+    <input id="number" placeholder="Enter Vehicle Number">
+    <br>
+    <button onclick="getData()">Search</button>
+
+    <div id="result" class="result">Enter vehicle number...</div>
+</div>
+
+<script>
+function getData() {
+    let number = document.getElementById("number").value.trim().toUpperCase();
+
+    if (!number) {
+        alert("Enter vehicle number");
+        return;
+    }
+
+    document.getElementById("result").innerHTML = "⏳ Loading...";
+
+    fetch(`/api/getdata?number=${number}`)
+    .then(res => res.json())
+    .then(data => {
+
+        console.log(data);
+
+        let v = data?.result?.vehicle_info?.data;
+
+        if (!v) {
+            document.getElementById("result").innerHTML = "❌ No data found";
+            return;
+        }
+
+        let html = "";
+
+        for (let key in v) {
+            let value = v[key];
+
+            // skip empty or NA
+            if (!value || value === "NA") continue;
+
+            // mobile special handling
+            if (key === "mobile_number") {
+                html += `<p><b class="label">📱 Mobile:</b> ${value}</p>`;
+                continue;
+            }
+
+            html += `<p><b class="label">${formatKey(key)}:</b> ${value}</p>`;
+        }
+
+        document.getElementById("result").innerHTML = html;
+    })
+    .catch(err => {
+        console.error(err);
+        document.getElementById("result").innerHTML = "❌ Error fetching data";
+    });
+}
+
+function formatKey(key) {
+    return key
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, l => l.toUpperCase());
+}
+
+// Enter key support
+document.getElementById("number").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") getData();
+});
+</script>
+
+</body>
+</html>
